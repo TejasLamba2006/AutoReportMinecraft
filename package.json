@@ -1,0 +1,19 @@
+{
+  "name": "autoreportminecraft",
+  "module": "dist/index.js",
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@types/screenshot-desktop": "^1.12.3",
+    "active-window": "^0.1.0",
+    "chalk": "^5.3.0",
+    "chokidar": "^3.6.0",
+    "colors": "^1.4.0",
+    "csv-parser": "^3.0.0",
+    "dotenv": "^16.4.5",
+    "jimp": "^0.22.12",
+    "screenshot-desktop": "^1.15.0",
+    "tail": "^2.2.6"
+  }
+}
