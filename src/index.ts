@@ -5,7 +5,7 @@ import Jimp from "jimp";
 import { Tail } from "tail";
 import colors from "colors";
 import { config } from "dotenv";
-import { REGEX, checkProfanity } from "./constants";
+import { checkProfanity, Slur } from "./constants";
 
 config();
 
@@ -22,17 +22,23 @@ function replacePlaceholders(template: string, appdataPath: string): string {
   return template.replace("{{appdata}}", appdataPath);
 }
 
-async function containsProfanity(message: string): Promise<boolean> {
+async function containsProfanity(message: string): Promise<Slur> {
   const profanity = await checkProfanity(message);
-  return profanity !== null;
+  return profanity;
 }
 
-async function takeScreenshot(ruleBroken: string, username: string) {
+async function takeScreenshot(Profanity: Slur, msg: string) {
   const date = new Date().toISOString().split("T")[0];
   const screenshotSavePath = screenshotSavePathTemplate
     .replace("{{date}}", date)
-    .replace("{{rule_broken}}", ruleBroken)
-    .replace("{{username}}", username);
+    .replace("{{rule_broken}}", Profanity.text)
+    .replace(
+      "{{msg}}",
+      msg
+        .replace(/\[.*?\]|�|\?/g, "")
+        .replace("  ", "")
+        .replace(" ", "")
+    );
 
   createDirIfNotExists(screenshotSavePath);
 
@@ -68,24 +74,14 @@ tail.on("line", async (data: string) => {
     .substring(chatIndex + 7)
     .replace(/(§|�)([0-9]|a|b|e|d|f|k|l|m|n|o|r|c)/gm, "");
   if (!msg) return;
-
-  changeGamemode(msg);
-  console.log(msg);
-  const match = parseMessage(msg);
-  if (!match) return;
-
-  const [, , username, message, message2] = match;
-  const isProfanity = await containsProfanity(
-    gamemode == "skyblockdream" ? message2 : message
-  );
-  if (!isProfanity) return;
-  const ruleBroken = "profanity";
+  const Profanity = await containsProfanity(msg);
+  if (!Profanity) return;
   log(
-    `Rule broken: ${ruleBroken} - Username: ${username} - Message: ${message}`,
+    `Word: ${Profanity.text} Rule broken: ${Profanity.category_1} - ${msg}`,
     "INFO"
   );
 
-  takeScreenshot(ruleBroken, username);
+  takeScreenshot(Profanity, msg);
 });
 const debug = process.env.DEBUG_APP;
 
@@ -104,38 +100,3 @@ function log(message: string, tag: string = "INFO") {
 }
 
 log(`Watching log file at ${logPath}`, "INFO");
-
-function changeGamemode(msg: string) {
-  let newGamemode = gamemode;
-  if (msg.includes("You are connected to Lobby")) newGamemode = "lobby";
-  if (msg.includes("You are connected to BWLOBBY")) newGamemode = "bedwars";
-  if (msg.includes("You are connected to FactionsImmortal"))
-    newGamemode = "factionsimmortal";
-  if (msg.includes("You are connected to SkyBlockDream"))
-    newGamemode = "skyblockdream";
-  if (msg.includes("You are connected to KitPvP")) newGamemode = "kitpvp";
-  if (msg.includes("You are connected to TBLOBBY")) newGamemode = "thebridge";
-  if (msg.includes("You are connected to Prison")) newGamemode = "prison";
-
-  if (newGamemode !== gamemode) {
-    gamemode = newGamemode;
-    log(`Gamemode: ${gamemode}`, "DEBUG");
-  }
-}
-
-function parseMessage(msg: string): RegExpMatchArray | null {
-  if (typeof gamemode !== "string" || !Array.isArray(REGEX[gamemode])) {
-    console.error(`Invalid gamemode: ${gamemode}`);
-    return null;
-  }
-
-  const regexList = REGEX[gamemode];
-  for (const regex of regexList) {
-    const match = msg.match(regex);
-    if (match) {
-      return match;
-    }
-  }
-
-  return null;
-}

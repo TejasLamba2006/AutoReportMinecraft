@@ -1,25 +1,11 @@
 import * as fs from "fs";
 import csv from "csv-parser";
 
-export const REGEX = {
-  lobby: [/(\[.*?\])?\s*([a-zA-Z0-9_]+)\s*\[.*?\]\s*�\s*(.*)/],
-  bedwars: [/(\[.*?\])?\s*([a-zA-Z0-9_]+)\s*\[.*?\]\s*�\s*(.*)/],
-  factionsimmortal: [
-    /ToP\s?\?\s?�\[(.*?)\]�\s(.*?)\s\[.*?\]\s�\s(.*)/,
-    /\?\s?�\[(.*?)\]�\s(.*?)\s�\s(.*)/,
-    /\|\[.*?\]\|\s*([a-zA-Z0-9_]+)\s*.*?\s*�\s*(.*)/,
-  ],
-  skyblockdream: ["|[(.*?)]| ([^;]+) ; (?:(.*?) � )?(.*)"],
-  kitpvp: [],
-  thebridge: [/(\[.*?\])?\s*([a-zA-Z0-9_]+)\s*\[.*?\]\s*�\s*(.*)/],
-  prison: [],
-};
-
 export const PROFANITIES = {
   en: "../AutoReportMinecraft/profanities/en/profanity_en.csv",
 };
 
-interface Slur {
+export interface Slur {
   text: string;
   canonical_form_1: string;
   canonical_form_2?: string;
@@ -33,11 +19,12 @@ interface Slur {
 
 export function checkProfanity(message: string): Promise<Slur | null> {
   if (!message) return Promise.resolve(null);
+  const words = message.split(/\s+/);
   return new Promise((resolve, reject) => {
     fs.createReadStream(PROFANITIES.en)
       .pipe(csv())
       .on("data", (row: Slur) => {
-        if (message.includes(row.text)) {
+        if (words.includes(row.text)) {
           resolve(row);
         }
       })

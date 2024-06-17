@@ -1,4 +1,4 @@
 {
     "log_path": "{{appdata}}/.minecraft/logs/latest.log",
-    "screenshot_save_path": "{{appdata}}/.minecraft/autochatreport/{{date}}_{{rule_broken}}_{{username}}.png"
+    "screenshot_save_path": "{{appdata}}/.minecraft/autochatreport/{{date}}_{{rule_broken}}_{{msg}}.png"
 }

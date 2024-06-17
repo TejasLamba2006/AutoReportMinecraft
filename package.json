@@ -1,6 +1,6 @@
 {
   "name": "autoreportminecraft",
-  "module": "dist/index.js",
+  "main": "dist/index.js",
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
